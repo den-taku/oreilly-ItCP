@@ -5,35 +5,45 @@
 
 #define NUM_THREADS 10
 
-void *thread_func(void *arg) {
-    int id = (int)arg;
+void *thread_func(void *arg)
+{
     for (int i = 0; i < 5; ++i) {
-        printf("id = %d, i = %d\n", id, i);
+        printf("i = %d\n", i);
         sleep(1);
     }
 
-
-    return "finished!";
+    return NULL;
 }
 
 int main(int argc, char *argv[]) {
-    pthread_t v[NUM_THREADS];
-    // crate threads
-    for (int i = 0; i < NUM_THREADS; ++i) {
-        if (pthread_create(&v[i], NULL, thread_func, (void *)i)  != 0) {
-            perror("pthread_create");
-            return -1;
-        }
+    // initialize attribute
+    pthread_attr_t attr;
+    if (pthread_attr_init(&attr) != 0)
+    {
+        perror("pthread_attr_init");
+        return -1;
     }
-    // await threads
-    for (int i = 0; i < NUM_THREADS; ++i) {
-        char *ptr;
-        if (pthread_join(v[i], (void **)&ptr) == 0) {
-            printf("msg = %s\n", ptr);
-        } else {
-            perror("pthread_join");
-            return -1;
-        }
+    // set as detached thread
+    if (pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) != 0)
+    {
+        perror("pthread_attr_setdetachstate");
+        return -1;
     }
+    // create thread
+    pthread_t th;
+    if (pthread_create(&th, &attr, thread_func, NULL) != 0)
+    {
+        perror("pthread_create");
+        return -1;
+    }
+    // discard attribute
+    if (pthread_attr_destroy(&attr) != 0)
+    {
+        perror("pthread_attr_destroy");
+        return -1;
+    }
+
+    sleep(7);
+
     return 0;
 }
